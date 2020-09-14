@@ -10,20 +10,20 @@ import (
 	"github.com/loghole/db/wrapper"
 )
 
-func Open(tracer opentracing.Tracer, driverName, dataSourceName string) (db *sql.DB, err error) {
-	driverName, err = internal.WrappedDriver(wrapper.NewWrapper(tracer, dataSourceName), driverName)
+func Open(tracer opentracing.Tracer, driverName, dataSourceName string) (*sql.DB, error) {
+	newName, err := internal.WrappedDriver(wrapper.NewWrapper(tracer, dataSourceName), driverName)
 	if err != nil {
 		return nil, err
 	}
 
-	return sql.Open(driverName, dataSourceName)
+	return sql.Open(newName, dataSourceName)
 }
 
-func OpenSQLx(tracer opentracing.Tracer, driverName, dataSourceName string) (db *sqlx.DB, err error) {
-	driverName, err = internal.WrappedDriver(wrapper.NewWrapper(tracer, dataSourceName), driverName)
+func OpenSQLx(tracer opentracing.Tracer, driverName, dataSourceName string) (*sqlx.DB, error) {
+	db, err := Open(tracer, driverName, dataSourceName)
 	if err != nil {
 		return nil, err
 	}
 
-	return sqlx.Open(driverName, dataSourceName)
+	return sqlx.NewDb(db, driverName), nil
 }

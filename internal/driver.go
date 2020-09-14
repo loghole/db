@@ -57,13 +57,13 @@ func (d *Driver) Open(name string) (driver.Conn, error) {
 
 	switch conn := conn.(type) {
 	case driverConnQueryExecAndNamedValue:
-		return NewConnQueryExecAndNamedValue(conn), nil
+		return NewConnQueryExecAndNamedValue(conn, d.Wrapper), nil
 	case driverConnQueryExec:
-		return NewConnQueryExec(conn), nil
+		return NewConnQueryExec(conn, d.Wrapper), nil
 	case driverConnNamedValue:
-		return NewConnNamedValue(conn), nil
+		return NewConnNamedValue(conn, d.Wrapper), nil
 	case driverConnBeginTx:
-		return NewConnBeginTx(conn), nil
+		return NewConnBeginTx(conn, d.Wrapper), nil
 	}
 
 	return conn, nil

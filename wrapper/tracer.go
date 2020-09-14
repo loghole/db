@@ -64,5 +64,5 @@ func (t *Tracer) AfterQuery(ctx context.Context, err error) {
 }
 
 func (t *Tracer) buildSpanName(action string) string {
-	return strings.Join([]string{"SQL:", action}, " ")
+	return strings.Join([]string{"SQL", action}, " ")
 }

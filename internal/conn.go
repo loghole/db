@@ -13,8 +13,11 @@ type ConnBeginTx struct {
 	wrapper.Wrapper
 }
 
-func NewConnBeginTx(conn driverConnBeginTx) *ConnBeginTx {
-	return &ConnBeginTx{driverConnBeginTx: conn}
+func NewConnBeginTx(
+	conn driverConnBeginTx,
+	wrapper wrapper.Wrapper,
+) *ConnBeginTx {
+	return &ConnBeginTx{driverConnBeginTx: conn, Wrapper: wrapper}
 }
 
 func (c *ConnBeginTx) PrepareContext(ctx context.Context, query string) (stmt driver.Stmt, err error) {
@@ -63,9 +66,12 @@ type ConnNamedValue struct {
 	conn driverConnNamedValue
 }
 
-func NewConnNamedValue(conn driverConnNamedValue) *ConnNamedValue {
+func NewConnNamedValue(
+	conn driverConnNamedValue,
+	wrapper wrapper.Wrapper,
+) *ConnNamedValue {
 	return &ConnNamedValue{
-		ConnBeginTx: NewConnBeginTx(conn),
+		ConnBeginTx: NewConnBeginTx(conn, wrapper),
 		conn:        conn,
 	}
 }
@@ -79,9 +85,12 @@ type ConnQueryExec struct {
 	conn driverConnQueryExec
 }
 
-func NewConnQueryExec(conn driverConnQueryExec) *ConnQueryExec {
+func NewConnQueryExec(
+	conn driverConnQueryExec,
+	wrapper wrapper.Wrapper,
+) *ConnQueryExec {
 	return &ConnQueryExec{
-		ConnBeginTx: NewConnBeginTx(conn),
+		ConnBeginTx: NewConnBeginTx(conn, wrapper),
 		conn:        conn,
 	}
 }
@@ -111,9 +120,12 @@ type ConnQueryExecAndNamedValue struct {
 	conn driverConnQueryExecAndNamedValue
 }
 
-func NewConnQueryExecAndNamedValue(conn driverConnQueryExecAndNamedValue) *ConnQueryExecAndNamedValue {
+func NewConnQueryExecAndNamedValue(
+	conn driverConnQueryExecAndNamedValue,
+	wrapper wrapper.Wrapper,
+) *ConnQueryExecAndNamedValue {
 	return &ConnQueryExecAndNamedValue{
-		ConnQueryExec: NewConnQueryExec(conn),
+		ConnQueryExec: NewConnQueryExec(conn, wrapper),
 		conn:          conn,
 	}
 }
