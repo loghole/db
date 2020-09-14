@@ -15,12 +15,45 @@ func NewConnBeginTx(conn driverConnBeginTx) *ConnBeginTx {
 	return &ConnBeginTx{driverConnBeginTx: conn}
 }
 
+func (c *ConnBeginTx) PrepareContext(ctx context.Context, query string) (stmt driver.Stmt, err error) {
+	stmt, err = c.prepare(ctx, query)
+
+	return NewStmt(stmt, c.Wrapper), nil
+}
+
 func (c *ConnBeginTx) BeginTx(ctx context.Context, opts driver.TxOptions) (tx driver.Tx, err error) {
-	log.Println("BeginTx")
+	var (
+		txCtx    = c.Wrapper.BeforeQuery(ctx, "tx")
+		beginCtx = c.Wrapper.BeforeQuery(ctx, "begin")
+	)
 
 	tx, err = c.driverConnBeginTx.BeginTx(ctx, opts)
 
-	return &Tx{Tx: tx}, nil
+	c.Wrapper.AfterQuery(beginCtx, err)
+
+	return NewTx(tx, c.Wrapper, ctx, txCtx), err
+}
+
+func (c *ConnBeginTx) prepare(ctx context.Context, query string) (driver.Stmt, error) {
+	if conn, ok := c.driverConnBeginTx.(driver.ConnPrepareContext); ok {
+		return conn.PrepareContext(ctx, query)
+	}
+
+	stmt, err := c.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	select {
+	case <-ctx.Done():
+		if err := stmt.Close(); err != nil {
+			return nil, err
+		}
+
+		return nil, ctx.Err()
+	default:
+		return stmt, err
+	}
 }
 
 type ConnNamedValue struct {
@@ -51,14 +84,24 @@ func NewConnQueryExec(conn driverConnQueryExec) *ConnQueryExec {
 	}
 }
 
-func (c *ConnQueryExec) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
-	log.Println("QueryContext")
-	return c.conn.QueryContext(ctx, query, args)
+func (c *ConnQueryExec) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (rows driver.Rows, err error) {
+	ctx = c.Wrapper.BeforeQuery(ctx, "query")
+
+	rows, err = c.conn.QueryContext(ctx, query, args)
+
+	c.Wrapper.AfterQuery(ctx, err)
+
+	return rows, err
 }
 
-func (c *ConnQueryExec) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
-	log.Println("ExecContext")
-	return c.conn.ExecContext(ctx, query, args)
+func (c *ConnQueryExec) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (result driver.Result, err error) {
+	ctx = c.Wrapper.BeforeQuery(ctx, "exec")
+
+	result, err = c.conn.ExecContext(ctx, query, args)
+
+	c.Wrapper.AfterQuery(ctx, err)
+
+	return result, err
 }
 
 type ConnQueryExecAndNamedValue struct {

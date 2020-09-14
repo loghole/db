@@ -2,11 +2,12 @@ package internal
 
 import (
 	"context"
-	"crypto/sha256"
 	"database/sql"
 	"database/sql/driver"
-	"encoding/hex"
+	"fmt"
 )
+
+const wrappedAlias = "%s-wrapped"
 
 type driverConnBeginTx interface {
 	driver.Conn
@@ -30,28 +31,26 @@ type driverConnQueryExecAndNamedValue interface {
 }
 
 type Wrapper interface {
-	BeforeQuery(ctx context.Context) context.Context
+	BeforeQuery(ctx context.Context, action string) context.Context
 	AfterQuery(ctx context.Context, err error)
 }
 
 type Driver struct {
 	driver.Driver
+	Wrapper
 }
 
-func WrappedDriver(driverName string) string {
+func WrappedDriver(wrapper Wrapper, driverName string) (newName string, err error) {
 	db, err := sql.Open(driverName, "")
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	hash := sha256.New()
-	hash.Write([]byte(driverName))
+	newName = fmt.Sprintf(wrappedAlias, driverName)
 
-	newName := hex.EncodeToString(hash.Sum(nil))
+	sql.Register(newName, &Driver{Driver: db.Driver(), Wrapper: wrapper})
 
-	sql.Register(newName, &Driver{Driver: db.Driver()})
-
-	return newName
+	return newName, nil
 }
 
 func (d *Driver) Open(name string) (driver.Conn, error) {

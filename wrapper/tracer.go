@@ -3,6 +3,7 @@ package wrapper
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -30,8 +31,8 @@ func NewTracer(tracer opentracing.Tracer, host, user, db string) *Tracer {
 	}
 }
 
-func (t *Tracer) BeforeQuery(ctx context.Context) context.Context {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, "sql: ...")
+func (t *Tracer) BeforeQuery(ctx context.Context, action string) context.Context {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, t.buildSpanName(action))
 
 	ext.DBInstance.Set(span, t.db)
 	ext.DBUser.Set(span, t.user)
@@ -60,4 +61,8 @@ func (t *Tracer) AfterQuery(ctx context.Context, err error) {
 		ext.Error.Set(span, true)
 		span.LogFields(log.Error(err))
 	}
+}
+
+func (t *Tracer) buildSpanName(action string) string {
+	return strings.Join([]string{"SQL:", action}, " ")
 }

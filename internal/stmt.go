@@ -7,14 +7,34 @@ import (
 
 type Stmt struct {
 	driver.Stmt
+	Wrapper
 }
 
-func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
-	return s.exec(ctx, args)
+func NewStmt(stmt driver.Stmt, wrapper Wrapper) *Stmt {
+	return &Stmt{
+		Stmt:    stmt,
+		Wrapper: wrapper,
+	}
 }
 
-func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
-	return s.query(ctx, args)
+func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (result driver.Result, err error) {
+	ctx = s.Wrapper.BeforeQuery(ctx, "exec")
+
+	result, err = s.exec(ctx, args)
+
+	s.Wrapper.AfterQuery(ctx, err)
+
+	return result, err
+}
+
+func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (rows driver.Rows, err error) {
+	ctx = s.Wrapper.BeforeQuery(ctx, "query")
+
+	rows, err = s.query(ctx, args)
+
+	s.Wrapper.AfterQuery(ctx, err)
+
+	return rows, err
 }
 
 func (s *Stmt) exec(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
