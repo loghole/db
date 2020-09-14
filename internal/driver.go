@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"context"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+
+	"github.com/loghole/db/wrapper"
 )
 
 const wrappedAlias = "%s-wrapped"
@@ -30,17 +31,12 @@ type driverConnQueryExecAndNamedValue interface {
 	driver.NamedValueChecker
 }
 
-type Wrapper interface {
-	BeforeQuery(ctx context.Context, action string) context.Context
-	AfterQuery(ctx context.Context, err error)
-}
-
 type Driver struct {
 	driver.Driver
-	Wrapper
+	wrapper.Wrapper
 }
 
-func WrappedDriver(wrapper Wrapper, driverName string) (newName string, err error) {
+func WrappedDriver(wrapper wrapper.Wrapper, driverName string) (newName string, err error) {
 	db, err := sql.Open(driverName, "")
 	if err != nil {
 		return "", err

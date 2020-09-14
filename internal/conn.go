@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql/driver"
 	"log"
+
+	"github.com/loghole/db/wrapper"
 )
 
 type ConnBeginTx struct {
 	driverConnBeginTx
-	Wrapper
+	wrapper.Wrapper
 }
 
 func NewConnBeginTx(conn driverConnBeginTx) *ConnBeginTx {

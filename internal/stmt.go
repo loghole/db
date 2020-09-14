@@ -3,14 +3,16 @@ package internal
 import (
 	"context"
 	"database/sql/driver"
+
+	"github.com/loghole/db/wrapper"
 )
 
 type Stmt struct {
 	driver.Stmt
-	Wrapper
+	wrapper.Wrapper
 }
 
-func NewStmt(stmt driver.Stmt, wrapper Wrapper) *Stmt {
+func NewStmt(stmt driver.Stmt, wrapper wrapper.Wrapper) *Stmt {
 	return &Stmt{
 		Stmt:    stmt,
 		Wrapper: wrapper,

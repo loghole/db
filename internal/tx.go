@@ -3,16 +3,18 @@ package internal
 import (
 	"context"
 	"database/sql/driver"
+
+	"github.com/loghole/db/wrapper"
 )
 
 type Tx struct {
 	driver.Tx
-	Wrapper
+	wrapper.Wrapper
 	ctx   context.Context
 	txCtx context.Context
 }
 
-func NewTx(tx driver.Tx, wrapper Wrapper, ctx, txCtx context.Context) *Tx {
+func NewTx(tx driver.Tx, wrapper wrapper.Wrapper, ctx, txCtx context.Context) *Tx {
 	return &Tx{
 		Tx:      tx,
 		Wrapper: wrapper,
