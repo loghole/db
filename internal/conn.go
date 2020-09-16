@@ -28,8 +28,8 @@ func (c *ConnBeginTx) PrepareContext(ctx context.Context, query string) (stmt dr
 
 func (c *ConnBeginTx) BeginTx(ctx context.Context, opts driver.TxOptions) (tx driver.Tx, err error) {
 	var (
-		txCtx    = c.Wrapper.BeforeQuery(ctx, "tx")
-		beginCtx = c.Wrapper.BeforeQuery(ctx, "begin")
+		txCtx    = c.Wrapper.BeforeQuery(ctx, ActionTx)
+		beginCtx = c.Wrapper.BeforeQuery(ctx, ActionBegin)
 	)
 
 	tx, err = c.driverConnBeginTx.BeginTx(ctx, opts)
@@ -96,7 +96,7 @@ func NewConnQueryExec(
 }
 
 func (c *ConnQueryExec) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (rows driver.Rows, err error) {
-	ctx = c.Wrapper.BeforeQuery(ctx, "query")
+	ctx = c.Wrapper.BeforeQuery(ctx, ActionQuery)
 
 	rows, err = c.conn.QueryContext(ctx, query, args)
 
@@ -106,7 +106,7 @@ func (c *ConnQueryExec) QueryContext(ctx context.Context, query string, args []d
 }
 
 func (c *ConnQueryExec) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (result driver.Result, err error) {
-	ctx = c.Wrapper.BeforeQuery(ctx, "exec")
+	ctx = c.Wrapper.BeforeQuery(ctx, ActionExec)
 
 	result, err = c.conn.ExecContext(ctx, query, args)
 

@@ -31,15 +31,19 @@ func NewTracer(tracer opentracing.Tracer, host, user, db string) *Tracer {
 	}
 }
 
-func (t *Tracer) BeforeQuery(ctx context.Context, action string) context.Context {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, t.buildSpanName(action))
+func (t *Tracer) BeforeQuery(ctx context.Context, action Action) context.Context {
+	if parent := opentracing.SpanFromContext(ctx); parent != nil {
+		span := t.tracer.StartSpan(t.buildSpanName(action), opentracing.ChildOf(parent.Context()))
 
-	ext.DBInstance.Set(span, t.db)
-	ext.DBUser.Set(span, t.user)
-	ext.SpanKindRPCClient.Set(span)
-	ext.DBType.Set(span, dbType)
+		ext.DBInstance.Set(span, t.db)
+		ext.DBUser.Set(span, t.user)
+		ext.SpanKindRPCClient.Set(span)
+		ext.DBType.Set(span, dbType)
 
-	span.SetTag(dbHost, t.host)
+		span.SetTag(dbHost, t.host)
+
+		return opentracing.ContextWithSpan(ctx, span)
+	}
 
 	return ctx
 }
@@ -63,6 +67,6 @@ func (t *Tracer) AfterQuery(ctx context.Context, err error) {
 	}
 }
 
-func (t *Tracer) buildSpanName(action string) string {
-	return strings.Join([]string{"SQL", action}, " ")
+func (t *Tracer) buildSpanName(action Action) string {
+	return strings.Join([]string{"SQL", action.String()}, " ")
 }

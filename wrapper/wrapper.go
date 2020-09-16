@@ -7,8 +7,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+type Action string
+
+func (a Action) String() string {
+	return string(a)
+}
+
 type Wrapper interface {
-	BeforeQuery(ctx context.Context, action string) context.Context
+	BeforeQuery(ctx context.Context, action Action) context.Context
 	AfterQuery(ctx context.Context, err error)
 }
 

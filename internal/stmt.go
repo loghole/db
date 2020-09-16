@@ -20,7 +20,7 @@ func NewStmt(stmt driver.Stmt, wrapper wrapper.Wrapper) *Stmt {
 }
 
 func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (result driver.Result, err error) {
-	ctx = s.Wrapper.BeforeQuery(ctx, "exec")
+	ctx = s.Wrapper.BeforeQuery(ctx, ActionExec)
 
 	result, err = s.exec(ctx, args)
 
@@ -30,7 +30,7 @@ func (s *Stmt) ExecContext(ctx context.Context, args []driver.NamedValue) (resul
 }
 
 func (s *Stmt) QueryContext(ctx context.Context, args []driver.NamedValue) (rows driver.Rows, err error) {
-	ctx = s.Wrapper.BeforeQuery(ctx, "query")
+	ctx = s.Wrapper.BeforeQuery(ctx, ActionQuery)
 
 	rows, err = s.query(ctx, args)
 
