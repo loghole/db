@@ -1,0 +1,12 @@
+version: '3'
+services:
+  cockroachdb:
+    image: cockroachdb/cockroach:v20.2.0
+    volumes:
+      - ./data/:/cockroachdb
+    command: start-single-node --insecure --store=/cockroachdb --cache=1G --max-sql-memory=1G --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080
+    ports:
+      - "19999:8080"
+      - "29999:26257"
+  
+

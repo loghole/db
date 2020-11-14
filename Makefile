@@ -6,3 +6,7 @@ gotest:
 
 golint:
 	golangci-lint run -v
+
+coclient:
+	docker exec -it postsearcher_cockroachdb_1 ./cockroach sql --insecure 
+	
